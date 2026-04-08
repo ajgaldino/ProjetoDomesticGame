@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 // IMPORTANTE: No celular, 'localhost' não funciona. 
 // Você deve usar o endereço IP da sua máquina no Wi-Fi (ex: 192.168.1.5)
 // Ou a URL do Render após fazer o deploy do backend.
-const API_URL = 'http://192.168.1.10:8000'; // Substitua pelo seu IP ou URL do Render
+const API_URL = 'https://bg-domesticquest.onrender.com'; // URL do Render
 
 const api = axios.create({
   baseURL: API_URL,
