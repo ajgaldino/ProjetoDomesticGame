@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Clipboard } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Clipboard, Platform } from 'react-native';
 import { Users, Copy, Check, ShieldCheck, History, ThumbsUp, ThumbsDown, User } from 'lucide-react-native';
 import { taskService, groupService } from '../../services/api';
 import { supabase } from '../../lib/supabase';
@@ -18,7 +18,7 @@ export default function HouseScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profileData } = await supabase.table('profiles').select('*, groups(*)').eq('id', user.id).single();
+      const { data: profileData } = await supabase.from('profiles').select('*, groups(*)').eq('id', user.id).single();
       setProfile(profileData);
 
       if (profileData?.current_group_id) {

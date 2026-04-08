@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, FlatList, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Trophy, Star } from 'lucide-react-native';
 import { taskService } from '../../services/api';
 import { LinearGradient } from 'expo-linear-gradient';

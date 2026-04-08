@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Home, ArrowRight, Plus } from 'lucide-react-native';
 import { groupService } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'between',
+    justifyContent: 'space-between',
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',

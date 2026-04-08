@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions, Platform } from 'react-native';
 import { CheckCircle2, Trophy, Bell, ShieldCheck, Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../lib/supabase';
@@ -20,7 +20,7 @@ export default function HomeScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profileData } = await supabase.table('profiles').select('*, groups(*)').eq('id', user.id).single();
+      const { data: profileData } = await supabase.from('profiles').select('*, groups(*)').eq('id', user.id).single();
       setProfile(profileData);
 
       if (profileData?.current_group_id) {
@@ -66,7 +66,7 @@ export default function HomeScreen() {
     return (
         <ScrollView 
             contentContainerStyle={{ flexGrow: 1, backgroundColor: '#020617' }}
-            refreshControl={<RefreshControlRefreshing={refreshing} onRefresh={fetchData} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchData} />}
         >
             <View style={styles.headerSpacer} />
             <GroupManagerMobile onJoined={fetchData} />
