@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { X, Plus, ShieldCheck, ShoppingCart, Sparkles } from 'lucide-react-native';
-import { taskService } from '@/lib/api';
+import { taskService } from '../services/api';
 
 interface AddTaskModalProps {
   visible: boolean;

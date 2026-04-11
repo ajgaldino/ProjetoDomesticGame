@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { X, Gift, Coins } from 'lucide-react-native';
-import api from '@/services/api';
+import api from '../services/api';
 
 interface AddRewardModalProps {
   visible: boolean;
