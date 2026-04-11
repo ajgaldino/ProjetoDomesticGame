@@ -17,6 +17,11 @@ create table if not exists profiles (
   avatar_url text,
   current_group_id uuid references groups(id),
   total_points integer default 0,
+  exp_cleaning integer default 0,
+  exp_org integer default 0,
+  exp_cooking integer default 0,
+  streak_count integer default 0,
+  last_completion_date date,
   level integer default 1,
   title text default 'Iniciante',
   updated_at timestamp with time zone default now()
@@ -29,6 +34,7 @@ create table if not exists tasks (
   name text not null,
   description text,
   points integer not null,
+  category text check (category in ('cleaning', 'organization', 'cooking', 'other')) default 'other',
   status text check (status in ('active', 'pending_approval', 'rejected', 'archived')) default 'active',
   proposed_by uuid references profiles(id),
   created_at timestamp with time zone default now()
@@ -72,6 +78,25 @@ create table if not exists user_achievements (
   achievement_id uuid references achievements(id),
   earned_at timestamp with time zone default now(),
   primary key (user_id, achievement_id)
+);
+
+-- 8. TABELAS DE MERCADO (LOJA)
+create table if not exists marketplace_rewards (
+  id uuid primary key default uuid_generate_v4(),
+  group_id uuid references groups(id) on delete cascade,
+  title text not null,
+  description text,
+  price_points integer not null,
+  is_default boolean default false,
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists marketplace_purchases (
+  id uuid primary key default uuid_generate_v4(),
+  reward_id uuid references marketplace_rewards(id) on delete cascade,
+  user_id uuid references profiles(id) on delete cascade,
+  status text check (status in ('pending', 'redeemed')) default 'pending',
+  purchased_at timestamp with time zone default now()
 );
 
 -- Triggers para atualizar pontos automaticamente podem ser adicionados depois.

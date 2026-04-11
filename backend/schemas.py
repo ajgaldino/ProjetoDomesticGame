@@ -28,12 +28,14 @@ class TaskBase(BaseModel):
     name: str
     description: Optional[str] = None
     points: int
+    category: Optional[str] = 'other'
 
 class TaskCreate(BaseModel):
     name: str
     description: Optional[str] = None
     points: int
     group_id: str
+    category: Optional[str] = 'other'
 
 class TaskUpdate(BaseModel):
     name: Optional[str] = None
@@ -46,6 +48,7 @@ class TaskResponse(BaseModel):
     name: str
     description: Optional[str] = None
     points: int
+    category: str
     status: str
     proposed_by: Optional[str] = None
     created_at: datetime
@@ -60,6 +63,31 @@ class ProfileResponse(BaseModel):
     id: str
     username: str
     total_points: int
+    exp_cleaning: int
+    exp_org: int
+    exp_cooking: int
+    streak_count: int
     level: int
     title: str
     avatar_url: Optional[str] = None
+
+# --- MARKETPLACE ---
+class RewardResponse(BaseModel):
+    id: str
+    group_id: str
+    title: str
+    description: Optional[str] = None
+    price_points: int
+    is_default: bool
+    created_at: datetime
+
+class PurchaseCreate(BaseModel):
+    reward_id: str
+
+class PurchaseResponse(BaseModel):
+    id: str
+    reward_id: str
+    user_id: str
+    status: str
+    purchased_at: datetime
+    reward: Optional[RewardResponse] = None

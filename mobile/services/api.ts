@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase';
 // IMPORTANTE: No celular, 'localhost' não funciona. 
 // Você deve usar o endereço IP da sua máquina no Wi-Fi (ex: 192.168.1.5)
 // Ou a URL do Render após fazer o deploy do backend.
-const API_URL = 'https://bg-domesticquest.onrender.com'; // URL do Render
+// const API_URL = 'https://bg-domesticquest.onrender.com'; // URL do Render
+const API_URL = 'http://192.168.3.21:8000'; // IP Local para testes Wi-Fi
 
 const api = axios.create({
   baseURL: API_URL,
@@ -28,6 +29,10 @@ export const taskService = {
   approve: (id: string, decision: string) => api.post(`/tasks/${id}/approve`, { decision }),
   importJSON: (json: any) => api.post('/tasks/import', json),
   propose: (data: any) => api.post('/tasks/propose', data),
+  // Marketplace & Social
+  getRewards: () => api.get('/marketplace/rewards'),
+  purchaseReward: (reward_id: string) => api.post('/marketplace/purchase', { reward_id }),
+  getMural: () => api.get('/mural'),
 };
 
 export const groupService = {

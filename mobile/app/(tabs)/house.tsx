@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Clipboard, Platform } from 'react-native';
-import { Users, Copy, Check, ShieldCheck, History, ThumbsUp, ThumbsDown, User } from 'lucide-react-native';
+import { Users, Copy, Check, ShieldCheck, History, ThumbsUp, ThumbsDown, User, Gift, Plus } from 'lucide-react-native';
 import { taskService, groupService } from '../../services/api';
 import { supabase } from '../../lib/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AddRewardModal } from '@/components/AddRewardModal';
 
 export default function HouseScreen() {
   const [loading, setLoading] = useState(true);
@@ -12,6 +13,7 @@ export default function HouseScreen() {
   const [history, setHistory] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [rewardModalVisible, setRewardModalVisible] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -90,6 +92,19 @@ export default function HouseScreen() {
             </TouchableOpacity>
         </LinearGradient>
 
+        {/* Marketplace Management */}
+        <Text style={styles.sectionTitle}>Gestão de Recompensas</Text>
+        <TouchableOpacity style={styles.manageBtn} onPress={() => setRewardModalVisible(true)}>
+            <View style={styles.manageIconBg}>
+                <Gift size={20} color="#fbbf24" />
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={styles.manageTitle}>Adicionar Prêmio na Loja</Text>
+                <Text style={styles.manageSubtitle}>Crie novos mimos para os moradores</Text>
+            </View>
+            <Plus size={20} color="#64748b" />
+        </TouchableOpacity>
+
         {/* Approvals Section */}
         <Text style={styles.sectionTitle}>Votação Comunitária</Text>
         {pendingTasks.length > 0 ? pendingTasks.map((task) => (
@@ -158,8 +173,14 @@ export default function HouseScreen() {
                 <Text style={styles.emptyText}>Ainda não há registros de atividades.</Text>
             </View>
         )}
-
       </View>
+
+      <AddRewardModal 
+        visible={rewardModalVisible} 
+        groupId={profile?.current_group_id} 
+        onClose={() => setRewardModalVisible(false)}
+        onSuccess={fetchData}
+      />
     </ScrollView>
   );
 }
@@ -187,7 +208,7 @@ const styles = StyleSheet.create({
   padding: {
     padding: 24,
     paddingTop: 0,
-    paddingBottom: 40,
+    paddingBottom: 120, // Aumentado para não ficar sob as abas
   },
   card: {
     padding: 32,
@@ -237,6 +258,34 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 4,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  manageBtn: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  manageIconBg: {
+      width: 44,
+      height: 44,
+      backgroundColor: 'rgba(251, 191, 36, 0.1)',
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+  },
+  manageTitle: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 14,
+  },
+  manageSubtitle: {
+      color: '#64748b',
+      fontSize: 12,
   },
   sectionTitle: {
     color: '#64748b',

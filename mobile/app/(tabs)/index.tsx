@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions, Platform } from 'react-native';
-import { CheckCircle2, Trophy, Bell, ShieldCheck, Plus } from 'lucide-react-native';
+import { CheckCircle2, Trophy, Bell, ShieldCheck, Plus, Sparkles, Flame, Zap } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { supabase } from '../../lib/supabase';
 import { taskService } from '../../services/api';
 import { GroupManagerMobile } from '@/components/GroupManagerMobile';
+import { AddTaskModal } from '@/components/AddTaskModal';
 
 const { width } = Dimensions.get('window');
 
@@ -14,13 +16,22 @@ export default function HomeScreen() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [pendingTasks, setPendingTasks] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const fetchData = async () => {
+    console.log("DEBUG: Iniciando busca de dados (Profile/Tasks)...");
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profileData } = await supabase.from('profiles').select('*, groups(*)').eq('id', user.id).single();
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*, groups(*)')
+        .eq('id', user.id);
+      
+      if (profileError) return;
+
+      const profileData = profiles && profiles.length > 0 ? profiles[0] : null;
       setProfile(profileData);
 
       if (profileData?.current_group_id) {
@@ -41,12 +52,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchData();
-    
-    // Suporte a Realtime (Incompleto aqui, mas o fluxo base funciona)
   }, []);
 
   const handleComplete = async (taskId: string) => {
     try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await taskService.complete(taskId);
       fetchData();
     } catch (err) {
@@ -86,6 +96,10 @@ export default function HomeScreen() {
           <View style={styles.padding}>
             <View style={styles.header}>
                 <View>
+                    <View style={styles.streakBadge}>
+                      <Flame size={14} color="#f97316" fill="#f97316" />
+                      <Text style={styles.streakText}>{profile.streak_count || 0} DIAS</Text>
+                    </View>
                     <Text style={styles.greeting}>E aí, {profile.username}!</Text>
                     <Text style={styles.titleText}>{profile.title}</Text>
                 </View>
@@ -105,6 +119,21 @@ export default function HomeScreen() {
                 <Trophy size={80} color="rgba(255,255,255,0.05)" style={styles.trophyIcon} />
             </LinearGradient>
 
+            <View style={styles.statsGrid}>
+                <View style={styles.statBox}>
+                    <Text style={styles.statTitle}>🧹 LIMPEZA</Text>
+                    <Text style={styles.statValue}>{profile.exp_cleaning || 0}</Text>
+                </View>
+                <View style={styles.statBox}>
+                    <Text style={styles.statTitle}>👕 ORG.</Text>
+                    <Text style={styles.statValue}>{profile.exp_org || 0}</Text>
+                </View>
+                <View style={styles.statBox}>
+                    <Text style={styles.statTitle}>🍳 COZINHA</Text>
+                    <Text style={styles.statValue}>{profile.exp_cooking || 0}</Text>
+                </View>
+            </View>
+
             {pendingTasks.length > 0 && (
                 <TouchableOpacity style={styles.pendingBanner}>
                     <ShieldCheck size={18} color="#f59e0b" />
@@ -112,19 +141,24 @@ export default function HomeScreen() {
                 </TouchableOpacity>
             )}
 
-            <Text style={styles.sectionTitle}>Tarefas da Casa</Text>
+            <Text style={styles.sectionTitle}>Tarefas do Grupo</Text>
           </View>
         }
         renderItem={({ item }) => (
           <View style={styles.taskCard}>
             <View style={styles.taskIconBg}>
                 <Text style={{ fontSize: 24 }}>
-                    {item.name.toLowerCase().includes('louça') ? '🍽️' : item.name.toLowerCase().includes('roupa') ? '👕' : '🧹'}
+                    {item.category === 'cleaning' ? '🧹' : item.category === 'organization' ? '👕' : item.category === 'cooking' ? '🍳' : '✨'}
                 </Text>
             </View>
             <View style={styles.taskInfo}>
                 <Text style={styles.taskName}>{item.name}</Text>
-                <Text style={styles.taskPoints}>+{item.points} XP</Text>
+                <View style={styles.taskMeta}>
+                  <Text style={styles.taskPoints}>+{item.points} XP</Text>
+                  <Text style={[styles.categoryTag, { color: item.category === 'cleaning' ? '#22c55e' : item.category === 'organization' ? '#a855f7' : '#ef4444' }]}>
+                    • {item.category?.toUpperCase() || 'GERAL'}
+                  </Text>
+                </View>
             </View>
             <TouchableOpacity onPress={() => handleComplete(item.id)} style={styles.completeBtn}>
                 <CheckCircle2 size={24} color="#3b82f6" />
@@ -137,6 +171,27 @@ export default function HomeScreen() {
             </View>
         }
         contentContainerStyle={styles.listContent}
+      />
+
+      {/* Botão Flutuante (FAB) */}
+      <TouchableOpacity 
+        style={styles.fab} 
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          setModalVisible(true);
+        }}
+      >
+        <Plus color="white" size={32} />
+      </TouchableOpacity>
+
+      <AddTaskModal 
+        visible={modalVisible} 
+        groupId={profile.current_group_id}
+        onClose={() => setModalVisible(false)}
+        onSuccess={() => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          fetchData();
+        }}
       />
     </View>
   );
@@ -157,7 +212,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   listContent: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   headerSpacer: {
     height: 60,
@@ -168,6 +223,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 40,
     marginBottom: 24,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+    gap: 4,
+  },
+  streakText: {
+    color: '#f97316',
+    fontSize: 10,
+    fontWeight: '900',
   },
   greeting: {
     fontSize: 24,
@@ -193,7 +264,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   levelCard: {
-    padding: 20,
+    padding: 24,
     borderRadius: 24,
     overflow: 'hidden',
     marginBottom: 24,
@@ -228,6 +299,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -10,
     bottom: -10,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  statTitle: {
+    color: '#64748b',
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statValue: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   pendingBanner: {
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -283,11 +378,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  taskMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 2,
+  },
   taskPoints: {
     color: '#3b82f6',
     fontSize: 12,
     fontWeight: 'bold',
-    marginTop: 2,
+  },
+  categoryTag: {
+    fontSize: 9,
+    fontWeight: '800',
   },
   completeBtn: {
     width: 44,
@@ -305,5 +409,21 @@ const styles = StyleSheet.create({
     color: '#475569',
     textAlign: 'center',
     fontSize: 14,
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: Platform.OS === 'ios' ? 100 : 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#3b82f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
 });

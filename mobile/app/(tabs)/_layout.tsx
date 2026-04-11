@@ -3,10 +3,9 @@ import React from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { TabBarBackground } from '@/components/tab-bar-background';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { CheckCircle2, Trophy, Home } from 'lucide-react-native';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CheckCircle2, Trophy, Home, LayoutDashboard, ShoppingCart } from 'lucide-react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -17,7 +16,6 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#3b82f6',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
@@ -31,8 +29,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Fazer',
+          title: 'Tarefas',
           tabBarIcon: ({ color }) => <CheckCircle2 size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="mural"
+        options={{
+          title: 'Mural',
+          tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -40,6 +45,13 @@ export default function TabLayout() {
         options={{
           title: 'Ranking',
           tabBarIcon: ({ color }) => <Trophy size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="shop"
+        options={{
+          title: 'Loja',
+          tabBarIcon: ({ color }) => <ShoppingCart size={24} color={color} />,
         }}
       />
       <Tabs.Screen

@@ -1,24 +1,47 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
-import { Home, ArrowRight, Plus } from 'lucide-react-native';
+import { Home, ArrowRight, Plus, Copy, Check } from 'lucide-react-native';
 import { groupService } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Clipboard from 'expo-clipboard';
 
 export function GroupManagerMobile({ onJoined }: { onJoined: () => void }) {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'create' | 'join' | null>(null);
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
+  const [createdGroup, setCreatedGroup] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleCreate = async () => {
     setLoading(true);
     try {
-      await groupService.create(name);
-      onJoined();
+      const res = await groupService.create(name);
+      setCreatedGroup(res.data);
     } catch (err: any) {
       Alert.alert("Erro", err.response?.data?.detail || "Erro ao criar grupo");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (createdGroup) {
+      await Clipboard.setStringAsync(createdGroup.join_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleStart = async () => {
+    setLoading(true);
+    try {
+        console.log("Reiniciando fluxo pós-criação...");
+        await onJoined();
+    } catch (err) {
+        console.error("Erro ao iniciar:", err);
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -34,26 +57,58 @@ export function GroupManagerMobile({ onJoined }: { onJoined: () => void }) {
     }
   };
 
+  if (createdGroup) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.iconCircle}>
+          <Home size={40} color="#10b981" />
+        </View>
+        <Text style={styles.welcome}>Grupo Criado!</Text>
+        <Text style={styles.desc}>Compartilhe o código abaixo para que outros membros possam entrar no grupo **{createdGroup.name}**.</Text>
+        
+        <View style={styles.codeCard}>
+            <Text style={styles.codeLabel}>CÓDIGO DE ACESSO</Text>
+            <View style={styles.codeRow}>
+                <Text style={styles.codeValue}>{createdGroup.join_code}</Text>
+                <TouchableOpacity onPress={handleCopy} style={styles.copyBtn}>
+                    {copied ? <Check size={24} color="#10b981" /> : <Copy size={24} color="#3b82f6" />}
+                </TouchableOpacity>
+            </View>
+        </View>
+
+        <TouchableOpacity 
+            style={styles.confirmButton} 
+            onPress={handleStart}
+            disabled={loading}
+        >
+            <LinearGradient colors={['#10b981', '#059669']} style={styles.buttonGradient}>
+                {loading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Começar Agora</Text>}
+            </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!mode) {
     return (
       <View style={styles.container}>
         <View style={styles.iconCircle}>
           <Home size={40} color="#3b82f6" />
         </View>
-        <Text style={styles.welcome}>Sua Casa, Sua Jornada</Text>
-        <Text style={styles.desc}>Você ainda não faz parte de nenhuma casa no DomesticQuest.</Text>
+        <Text style={styles.welcome}>Seu Grupo, Sua Jornada</Text>
+        <Text style={styles.desc}>Você ainda não faz parte de nenhum grupo no DomesticQuest.</Text>
         
         <TouchableOpacity style={styles.optionCard} onPress={() => setMode('create')}>
           <View>
-            <Text style={styles.optionTitle}>Criar uma Casa</Text>
-            <Text style={styles.optionDesc}>Comece um novo grupo do zero</Text>
+            <Text style={styles.optionTitle}>Criar um Grupo</Text>
+            <Text style={styles.optionDesc}>Comece uma nova equipe do zero</Text>
           </View>
           <ArrowRight color="#3b82f6" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.optionCard} onPress={() => setMode('join')}>
           <View>
-            <Text style={styles.optionTitle}>Entrar em uma Casa</Text>
+            <Text style={styles.optionTitle}>Entrar em um Grupo</Text>
             <Text style={styles.optionDesc}>Use um código de convite</Text>
           </View>
           <ArrowRight color="#8b5cf6" />
@@ -70,13 +125,13 @@ export function GroupManagerMobile({ onJoined }: { onJoined: () => void }) {
       
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
-            {mode === 'create' ? 'Nomeie sua Residência' : 'Digite o Código'}
+            {mode === 'create' ? 'Nomeie seu Grupo' : 'Digite o Código'}
         </Text>
 
         {mode === 'create' ? (
             <TextInput
                 style={styles.input}
-                placeholder="Ex: Mansão Wayne, Nossa Casa..."
+                placeholder="Ex: Mansão Wayne, Nossa Família..."
                 placeholderTextColor="#64748b"
                 value={name}
                 onChangeText={setName}
@@ -209,5 +264,39 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  codeCard: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    marginBottom: 32,
+  },
+  codeLabel: {
+    color: '#3b82f6',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  codeValue: {
+    color: 'white',
+    fontSize: 32,
+    fontWeight: 'bold',
+    letterSpacing: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  copyBtn: {
+    padding: 8,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 12,
   },
 });
