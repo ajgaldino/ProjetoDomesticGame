@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "newArchEnabled": false
+      "newArchEnabled": true
     },
     "web": {
       "output": "static",
