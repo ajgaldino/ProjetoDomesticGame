@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "newArchEnabled": true
+      "newArchEnabled": false
     },
     "web": {
       "output": "static",
@@ -40,17 +40,7 @@
           }
         }
       ],
-      "expo-font",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "minSdkVersion": 31,
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35
-          }
-        }
-      ]
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
