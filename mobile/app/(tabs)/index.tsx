@@ -7,6 +7,8 @@ import { supabase } from '../../lib/supabase';
 import { taskService } from '../../services/api';
 import { GroupManagerMobile } from '@/components/GroupManagerMobile';
 import { AddTaskModal } from '@/components/AddTaskModal';
+import { TaskDetailsModal } from '@/components/TaskDetailsModal';
+import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +19,8 @@ export default function HomeScreen() {
   const [pendingTasks, setPendingTasks] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailsVisible, setDetailsVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const fetchData = async () => {
     console.log("DEBUG: Iniciando busca de dados (Profile/Tasks)...");
@@ -55,13 +59,25 @@ export default function HomeScreen() {
   }, []);
 
   const handleComplete = async (taskId: string) => {
-    try {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await taskService.complete(taskId);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-    }
+    Alert.alert(
+      'Concluir Tarefa',
+      'Você confirma que concluiu esta tarefa?',
+      [
+        { text: 'Ainda não', style: 'cancel' },
+        {
+          text: 'Sim, concluí!',
+          onPress: async () => {
+            try {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              await taskService.complete(taskId);
+              fetchData();
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -145,7 +161,13 @@ export default function HomeScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={styles.taskCard}>
+          <TouchableOpacity 
+            style={styles.taskCard}
+            onPress={() => {
+                setSelectedTask(item);
+                setDetailsVisible(true);
+            }}
+          >
             <View style={styles.taskIconBg}>
                 <Text style={{ fontSize: 24 }}>
                     {item.category === 'cleaning' ? '🧹' : item.category === 'organization' ? '👕' : item.category === 'cooking' ? '🍳' : '✨'}
@@ -163,7 +185,7 @@ export default function HomeScreen() {
             <TouchableOpacity onPress={() => handleComplete(item.id)} style={styles.completeBtn}>
                 <CheckCircle2 size={24} color="#3b82f6" />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
             <View style={styles.empty}>
@@ -191,6 +213,16 @@ export default function HomeScreen() {
         onSuccess={() => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           fetchData();
+        }}
+      />
+
+      <TaskDetailsModal
+        visible={detailsVisible}
+        task={selectedTask}
+        onClose={() => setDetailsVisible(false)}
+        onComplete={handleComplete}
+        onSuccess={() => {
+            fetchData();
         }}
       />
     </View>

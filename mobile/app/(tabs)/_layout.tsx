@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { CheckCircle2, Trophy, Home, LayoutDashboard, ShoppingCart } from 'lucide-react-native';
+import { CheckCircle2, Trophy, Home, LayoutDashboard, ShoppingCart, History } from 'lucide-react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -36,8 +36,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="mural"
         options={{
-          title: 'Mural',
-          tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
+          title: 'Atividades',
+          tabBarIcon: ({ color }) => <History size={24} color={color} />,
         }}
       />
       <Tabs.Screen

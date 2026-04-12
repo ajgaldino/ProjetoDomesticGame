@@ -240,6 +240,21 @@ async def propose_new_task(task_data: TaskCreate, user=Depends(get_current_user)
     }).execute()
     return res.data[0]
 
+@app.put("/tasks/{task_id}")
+async def update_task(task_id: str, task_data: TaskUpdate, user=Depends(get_current_user)):
+    supabase = get_supabase()
+    update_data = {k: v for k, v in task_data.dict().items() if v is not None}
+    res = supabase.table("tasks").update(update_data).eq("id", task_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Tarefa não encontrada")
+    return res.data[0]
+
+@app.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, user=Depends(get_current_user)):
+    supabase = get_supabase()
+    res = supabase.table("tasks").delete().eq("id", task_id).execute()
+    return {"message": "Tarefa excluída com sucesso"}
+
 @app.post("/tasks/{task_id}/complete")
 async def complete_task(task_id: str, photo_url: Optional[str] = None, user=Depends(get_current_user)):
     supabase = get_supabase()
@@ -395,7 +410,6 @@ async def get_mural(user=Depends(get_current_user)):
     res = supabase.table("completed_tasks") \
         .select("*, profiles(username)") \
         .eq("group_id", group_id) \
-        .not_.is_("photo_url", "null") \
         .order("timestamp", desc=True) \
         .execute()
     return res.data

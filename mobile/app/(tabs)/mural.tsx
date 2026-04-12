@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, ActivityIndicator, RefreshControl } from 'react-native';
-import { Camera, Heart, MessageCircle } from 'lucide-react-native';
+import { History, CheckCircle2, Clock, Zap } from 'lucide-react-native';
 import { taskService } from '../../services/api';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-export default function MuralScreen() {
+export default function ActivitiesScreen() {
   const [loading, setLoading] = useState(true);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchMural = async () => {
+  const fetchActivities = async () => {
     try {
       const res = await taskService.getMural();
-      setPhotos(res.data);
+      setActivities(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -21,8 +23,46 @@ export default function MuralScreen() {
   };
 
   useEffect(() => {
-    fetchMural();
+    fetchActivities();
   }, []);
+
+  const renderActivityItem = ({ item }: { item: any }) => {
+    const timeAgo = formatDistanceToNow(new Date(item.timestamp), { 
+      addSuffix: true, 
+      locale: ptBR 
+    });
+
+    return (
+      <View style={styles.activityCard}>
+        <View style={styles.activityHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{item.profiles?.username?.[0]?.toUpperCase() || 'U'}</Text>
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.username}>
+              <Text style={styles.bold}>{item.profiles?.username}</Text> concluiu:
+            </Text>
+            <Text style={styles.taskName}>{item.task_name}</Text>
+          </View>
+          <View style={styles.xpBadge}>
+            <Zap size={10} color="#fbbf24" fill="#fbbf24" />
+            <Text style={styles.xpText}>+{item.points_earned} XP</Text>
+          </View>
+        </View>
+
+        {item.photo_url && (
+            <View style={styles.imageContainer}>
+                <Image source={{ uri: item.photo_url }} style={styles.image} resizeMode="cover" />
+            </View>
+        )}
+
+        <View style={styles.activityFooter}>
+          <Clock size={12} color="#475569" />
+          <Text style={styles.timeText}>{timeAgo}</Text>
+        </View>
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -35,42 +75,20 @@ export default function MuralScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Mural Social</Text>
-        <Text style={styles.subtitle}>Veja quem está mandando bem na casa!</Text>
+        <Text style={styles.title}>Atividades da Casa</Text>
+        <Text style={styles.subtitle}>Veja o que está acontecendo no momento</Text>
       </View>
 
       <FlatList
-        data={photos}
+        data={activities}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchMural} tintColor="#3b82f6" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchActivities} tintColor="#3b82f6" />}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{item.profiles?.username?.[0]?.toUpperCase() || 'U'}</Text>
-              </View>
-              <View>
-                <Text style={styles.username}>{item.profiles?.username}</Text>
-                <Text style={styles.taskName}>{item.task_name}</Text>
-              </View>
-            </View>
-            
-            <Image source={{ uri: item.photo_url }} style={styles.image} resizeMode="cover" />
-            
-            <View style={styles.cardFooter}>
-                <View style={styles.actions}>
-                    <Heart size={20} color="#ef4444" fill="#ef4444" />
-                    <MessageCircle size={20} color="#94a3b8" />
-                </View>
-                <Text style={styles.points}>+{item.points_earned} XP acumulados</Text>
-            </View>
-          </View>
-        )}
+        renderItem={renderActivityItem}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Camera size={48} color="#1e293b" />
-            <Text style={styles.emptyText}>Nenhuma foto no mural ainda. Complete uma tarefa com foto para aparecer aqui!</Text>
+            <History size={48} color="#1e293b" />
+            <Text style={styles.emptyText}>Nenhuma atividade registrada ainda. Vamos fazer as tarefas!</Text>
           </View>
         }
       />
@@ -109,64 +127,92 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  card: {
+  activityCard: {
     backgroundColor: '#0f172a',
     borderRadius: 20,
-    marginBottom: 20,
-    overflow: 'hidden',
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  cardHeader: {
+  activityHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
     gap: 12,
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#1e293b',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   avatarText: {
-    color: 'white',
+    color: '#3b82f6',
     fontWeight: 'bold',
     fontSize: 16,
   },
+  headerText: {
+    flex: 1,
+  },
   username: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: '#94a3b8',
     fontSize: 14,
   },
+  bold: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   taskName: {
-    color: '#94a3b8',
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  xpBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  xpText: {
+    color: '#fbbf24',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  imageContainer: {
+    marginTop: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 150,
+    width: '100%',
+    backgroundColor: '#1e293b',
   },
   image: {
     width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#1e293b',
+    height: '100%',
   },
-  cardFooter: {
-    padding: 16,
-  },
-  actions: {
+  activityFooter: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 8,
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
   },
-  points: {
-    color: '#3b82f6',
+  timeText: {
+    color: '#475569',
     fontSize: 12,
-    fontWeight: '600',
   },
   empty: {
     padding: 60,
     alignItems: 'center',
     gap: 16,
+    marginTop: 40,
   },
   emptyText: {
     color: '#475569',
